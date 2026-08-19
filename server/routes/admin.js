@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const auth = require('../middleware/auth');
-const db = require('../db');
+const { db } = require('../db');
 
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
@@ -41,68 +41,59 @@ router.get('/check', auth, (req, res) => {
   res.json({ authenticated: true });
 });
 
-router.get('/feedbacks', auth, (req, res) => {
+router.get('/feedbacks', auth, async (req, res) => {
   try {
-    const feedbacks = db.prepare(`
-      SELECT
-        f.id,
-        f.token,
-        f.q1, f.q2, f.q3, f.q4, f.q5,
-        f.q6, f.q7, f.q8, f.q9, f.q10,
-        f.created_at,
-        t.used_at
+    const result = await db.execute(`
+      SELECT f.id, f.token, f.q1, f.q2, f.q3, f.q4, f.q5,
+             f.q6, f.q7, f.q8, f.q9, f.q10, f.created_at, t.used_at
       FROM feedbacks f
       JOIN tokens t ON f.token = t.token
       ORDER BY f.created_at DESC
-    `).all();
-
-    res.json(feedbacks);
+    `);
+    res.json(result.rows);
   } catch (err) {
     console.error('Feedbacks laden Fehler:', err);
     res.status(500).json({ error: 'Fehler beim Laden der Feedbacks' });
   }
 });
 
-router.get('/feedbacks/:id', auth, (req, res) => {
+router.get('/feedbacks/:id', auth, async (req, res) => {
   try {
-    const feedback = db.prepare(`
-      SELECT
-        f.id,
-        f.token,
-        f.q1, f.q2, f.q3, f.q4, f.q5,
-        f.q6, f.q7, f.q8, f.q9, f.q10,
-        f.created_at,
-        t.used_at
-      FROM feedbacks f
-      JOIN tokens t ON f.token = t.token
-      WHERE f.id = ?
-    `).get(req.params.id);
+    const result = await db.execute({
+      sql: `SELECT f.id, f.token, f.q1, f.q2, f.q3, f.q4, f.q5,
+                   f.q6, f.q7, f.q8, f.q9, f.q10, f.created_at, t.used_at
+            FROM feedbacks f
+            JOIN tokens t ON f.token = t.token
+            WHERE f.id = ?`,
+      args: [parseInt(req.params.id)]
+    });
 
-    if (!feedback) {
+    if (!result.rows.length) {
       return res.status(404).json({ error: 'Feedback nicht gefunden' });
     }
 
-    res.json(feedback);
+    res.json(result.rows[0]);
   } catch (err) {
     console.error('Feedback laden Fehler:', err);
     res.status(500).json({ error: 'Fehler beim Laden des Feedbacks' });
   }
 });
 
-router.delete('/feedbacks/:id', auth, (req, res) => {
+router.delete('/feedbacks/:id', auth, async (req, res) => {
   try {
-    const feedback = db.prepare('SELECT * FROM feedbacks WHERE id = ?').get(req.params.id);
+    const feedbackResult = await db.execute({
+      sql: 'SELECT * FROM feedbacks WHERE id = ?',
+      args: [parseInt(req.params.id)]
+    });
 
-    if (!feedback) {
+    if (!feedbackResult.rows.length) {
       return res.status(404).json({ error: 'Feedback nicht gefunden' });
     }
 
-    const transaction = db.transaction(() => {
-      db.prepare('DELETE FROM feedbacks WHERE id = ?').run(req.params.id);
-      db.prepare('UPDATE tokens SET used = 0, used_at = NULL WHERE token = ?').run(feedback.token);
-    });
+    const feedback = feedbackResult.rows[0];
 
-    transaction();
+    await db.execute({ sql: 'DELETE FROM feedbacks WHERE id = ?', args: [parseInt(req.params.id)] });
+    await db.execute({ sql: 'UPDATE tokens SET used = 0, used_at = NULL WHERE token = ?', args: [feedback.token] });
 
     res.json({ success: true });
   } catch (err) {
@@ -111,12 +102,10 @@ router.delete('/feedbacks/:id', auth, (req, res) => {
   }
 });
 
-router.post('/tokens', auth, (req, res) => {
+router.post('/tokens', auth, async (req, res) => {
   try {
     const token = crypto.randomBytes(16).toString('hex');
-
-    db.prepare('INSERT INTO tokens (token) VALUES (?)').run(token);
-
+    await db.execute({ sql: 'INSERT INTO tokens (token) VALUES (?)', args: [token] });
     res.json({ success: true, token });
   } catch (err) {
     console.error('Token erstellen Fehler:', err);
@@ -124,29 +113,34 @@ router.post('/tokens', auth, (req, res) => {
   }
 });
 
-router.get('/tokens', auth, (req, res) => {
+router.get('/tokens', auth, async (req, res) => {
   try {
-    const tokens = db.prepare('SELECT * FROM tokens ORDER BY created_at DESC').all();
-    res.json(tokens);
+    const result = await db.execute('SELECT * FROM tokens ORDER BY created_at DESC');
+    res.json(result.rows);
   } catch (err) {
     console.error('Tokens laden Fehler:', err);
     res.status(500).json({ error: 'Fehler beim Laden der Tokens' });
   }
 });
 
-router.delete('/tokens/:token', auth, (req, res) => {
+router.delete('/tokens/:token', auth, async (req, res) => {
   try {
-    const tokenRow = db.prepare('SELECT * FROM tokens WHERE token = ?').get(req.params.token);
+    const tokenResult = await db.execute({
+      sql: 'SELECT * FROM tokens WHERE token = ?',
+      args: [req.params.token]
+    });
 
-    if (!tokenRow) {
+    if (!tokenResult.rows.length) {
       return res.status(404).json({ error: 'Token nicht gefunden' });
     }
 
+    const tokenRow = tokenResult.rows[0];
+
     if (tokenRow.used) {
-      return res.status(400).json({ error: 'Verwendete Tokens können nicht gelöscht werden. Löschen Sie zuerst das zugehörige Feedback.' });
+      return res.status(400).json({ error: 'Verwendete Tokens können nicht gelöscht werden.' });
     }
 
-    db.prepare('DELETE FROM tokens WHERE token = ?').run(req.params.token);
+    await db.execute({ sql: 'DELETE FROM tokens WHERE token = ?', args: [req.params.token] });
     res.json({ success: true });
   } catch (err) {
     console.error('Token löschen Fehler:', err);

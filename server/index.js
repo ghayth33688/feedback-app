@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 
-require('./db');
+const { initDB } = require('./db');
 
 const feedbackRoutes = require('./routes/feedback');
 const adminRoutes = require('./routes/admin');
@@ -18,7 +18,8 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:"],
     }
@@ -32,13 +33,13 @@ app.use(cookieParser());
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 50,
-  message: { error: 'Zu viele Anfragen. Bitte versuchen Sie es später erneut.' }
+  message: { error: 'Zu viele Anfragen.' }
 });
 
 const feedbackSubmitLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 5,
-  message: { error: 'Zu viele Versuche. Bitte versuchen Sie es später erneut.' }
+  message: { error: 'Zu viele Versuche.' }
 });
 
 app.use('/api/', apiLimiter);
@@ -61,10 +62,18 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'feedback.html'));
 });
 
-const PORT = process.env.PORT || 3000;
+// Init DB and start server (local dev only)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Server läuft auf Port ${PORT}`);
-  console.log(`Feedback-Link: http://localhost:${PORT}/feedback/[token]`);
-  console.log(`Admin-Bereich: http://localhost:${PORT}/admin`);
-});
+  initDB().then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server läuft auf Port ${PORT}`);
+    });
+  }).catch(err => {
+    console.error('DB Init Fehler:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = app;
