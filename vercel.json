@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
     { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/feedback/:token", "destination": "/feedback.html" }
+    { "source": "/feedback/:token", "destination": "/feedback.html" },
+    { "source": "/", "destination": "/admin.html" }
   ]
 }
