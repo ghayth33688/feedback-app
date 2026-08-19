@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>Admin - Feedback Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <div id="loginView" class="view">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-icon">&#128274;</div>
+        <h1>Admin Login</h1>
+        <p>Zugang zum Feedback-Dashboard</p>
+      </div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Benutzername</label>
+          <input type="text" id="username" name="username" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Passwort</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required>
+        </div>
+        <div id="loginError" class="error-msg hidden"></div>
+        <button type="submit" class="btn-login">Anmelden</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="dashboardView" class="view hidden">
+    <header class="dashboard-header">
+      <div class="header-left">
+        <h1>&#128202; Feedback Dashboard</h1>
+        <span id="feedbackCount" class="badge">0</span>
+      </div>
+      <div class="header-right">
+        <button id="btnNewToken" class="btn btn-primary">+ Neuen Link erstellen</button>
+        <button id="btnLogout" class="btn btn-secondary">Abmelden</button>
+      </div>
+    </header>
+
+    <div class="tokens-section">
+      <h2>Feedback-Links</h2>
+      <div id="tokensList" class="tokens-list"></div>
+      <div id="noTokens" class="empty-state hidden">
+        <p>Noch keine Links erstellt. Klicke auf "+ Neuen Link erstellen".</p>
+      </div>
+    </div>
+
+    <div class="feedbacks-section">
+      <h2>Eingegangene Feedbacks</h2>
+      <div id="feedbacksList" class="feedbacks-list"></div>
+      <div id="noFeedbacks" class="empty-state hidden">
+        <p>Noch keine Feedbacks eingegangen.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="detailView" class="view hidden">
+    <header class="detail-header">
+      <button id="btnBack" class="btn btn-secondary">&#8594; Zurück</button>
+      <h2>Feedback-Details</h2>
+      <button id="btnDeleteFeedback" class="btn btn-danger">Löschen</button>
+    </header>
+    <div id="detailContent" class="detail-content"></div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>
