@@ -17,6 +17,10 @@ router.get('/validate/:token', async (req, res) => {
       return res.status(404).json({ valid: false, message: 'هذا الرابط غير صالح' });
     }
 
+    if (row.disabled) {
+      return res.status(400).json({ valid: false, message: 'تم تعطيل هذا الرابط.' });
+    }
+
     if (row.used) {
       return res.status(400).json({ valid: false, message: 'تم استخدام هذا الرابط بالفعل. شكرًا لك.' });
     }
@@ -41,6 +45,10 @@ router.post('/submit/:token', async (req, res) => {
 
     if (!row) {
       return res.status(404).json({ error: 'هذا الرابط غير صالح' });
+    }
+
+    if (row.disabled) {
+      return res.status(400).json({ error: 'تم تعطيل هذا الرابط.' });
     }
 
     if (row.used) {
@@ -76,6 +84,18 @@ router.post('/submit/:token', async (req, res) => {
       sql: `UPDATE tokens SET used = 1, used_at = datetime('now') WHERE token = ?`,
       args: [token]
     });
+
+    if (process.env.NOTIFICATION_WEBHOOK) {
+      try {
+        fetch(process.env.NOTIFICATION_WEBHOOK, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: `Neues Feedback eingegangen!\nFrage 1: ${q1?.substring(0, 100)}\nFrage 4: ${q4}\nFrage 5: ${q5}`
+          })
+        }).catch(() => {});
+      } catch (e) {}
+    }
 
     res.json({ success: true, message: 'شكراً لك على وقتك وعلى ملاحظاتك الصريحة. تم إرسال ملاحظاتك بنجاح.' });
   } catch (err) {

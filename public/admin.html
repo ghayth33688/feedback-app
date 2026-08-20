@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#1a1a2e">
+  <meta name="theme-color" content="#0f172a">
   <title>Admin - Feedback Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
@@ -14,20 +15,20 @@
     <div class="login-card">
       <div class="login-header">
         <div class="login-icon">&#128274;</div>
-        <h1>Admin Login</h1>
-        <p>Zugang zum Feedback-Dashboard</p>
+        <h1 data-i18n="login_title">Admin Login</h1>
+        <p data-i18n="login_sub">Zugang zum Feedback-Dashboard</p>
       </div>
       <form id="loginForm">
         <div class="form-group">
-          <label for="username">Benutzername</label>
+          <label for="username" data-i18n="login_user">Benutzername</label>
           <input type="text" id="username" name="username" autocomplete="username" required>
         </div>
         <div class="form-group">
-          <label for="password">Passwort</label>
+          <label for="password" data-i18n="login_pass">Passwort</label>
           <input type="password" id="password" name="password" autocomplete="current-password" required>
         </div>
         <div id="loginError" class="error-msg hidden"></div>
-        <button type="submit" class="btn-login">Anmelden</button>
+        <button type="submit" class="btn-login" data-i18n="login_btn">Anmelden</button>
       </form>
     </div>
   </div>
@@ -35,39 +36,140 @@
   <div id="dashboardView" class="view hidden">
     <header class="dashboard-header">
       <div class="header-left">
-        <h1>&#128202; Feedback Dashboard</h1>
+        <button id="btnHamburger" class="btn-hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <h1>&#128202; <span data-i18n="dashboard">Feedback Dashboard</span></h1>
         <span id="feedbackCount" class="badge">0</span>
       </div>
       <div class="header-right">
-        <button id="btnNewToken" class="btn btn-primary">+ Neuen Link erstellen</button>
-        <button id="btnLogout" class="btn btn-secondary">Abmelden</button>
+        <div class="lang-toggle">
+          <button class="lang-btn" data-lang="de">DE</button>
+          <button class="lang-btn" data-lang="en">EN</button>
+          <button class="lang-btn" data-lang="ar">AR</button>
+        </div>
+        <button id="btnNewToken" class="btn btn-primary" data-i18n="btn_new_token">+ Link erstellen</button>
+        <button id="btnBatchToken" class="btn btn-secondary" data-i18n="btn_batch">+ Mehrere</button>
+        <button id="btnExportCsv" class="btn btn-secondary">&#128229; CSV</button>
+        <button id="btnLogout" class="btn btn-secondary" data-i18n="btn_logout">Abmelden</button>
       </div>
     </header>
 
+    <nav id="mobileNav" class="mobile-nav hidden">
+      <button id="btnNewTokenM" class="btn btn-primary btn-full" data-i18n="btn_new_token">+ Link erstellen</button>
+      <button id="btnBatchTokenM" class="btn btn-secondary btn-full" data-i18n="btn_batch">+ Mehrere</button>
+      <button id="btnExportCsvM" class="btn btn-secondary btn-full">&#128229; CSV Export</button>
+      <button id="btnStatsM" class="btn btn-secondary btn-full">&#128202; <span data-i18n="stats">Statistiken</span></button>
+      <button id="btnLogoutM" class="btn btn-secondary btn-full" data-i18n="btn_logout">Abmelden</button>
+    </nav>
+
+    <div id="statsSection" class="stats-section hidden">
+      <h2 data-i18n="stats">Statistiken</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-label" data-i18n="stat_total">Gesamt Tokens</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statUsed">0</div>
+          <div class="stat-label" data-i18n="stat_used">Beantwortet</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statRate">0%</div>
+          <div class="stat-label" data-i18n="stat_rate">Antwortquote</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statDisabled">0</div>
+          <div class="stat-label" data-i18n="stat_disabled">Deaktiviert</div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3 data-i18n="chart_hours">Sbeitszeiten</h3>
+          <canvas id="chartQ4"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3 data-i18n="chart_respect">Umgang</h3>
+          <canvas id="chartQ5"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3 data-i18n="chart_fair">Fairness</h3>
+          <canvas id="chartQ6"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3 data-i18n="chart_transparency">Transparenz</h3>
+          <canvas id="chartQ7"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">&#128269;</span>
+        <input type="text" id="searchInput" placeholder="Suche in Feedbacks..." data-i18n-placeholder="search_placeholder">
+      </div>
+      <button id="btnToggleStats" class="btn btn-secondary btn-sm-inline">&#128202; <span data-i18n="stats_toggle">Stats</span></button>
+    </div>
+
     <div class="tokens-section">
-      <h2>Feedback-Links</h2>
+      <h2 data-i18n="section_links">Feedback-Links</h2>
       <div id="tokensList" class="tokens-list"></div>
+      <div id="tokensSkeleton" class="tokens-list">
+        <div class="skeleton-item"><div class="skeleton-line long"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-item"><div class="skeleton-line long"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-item"><div class="skeleton-line long"></div><div class="skeleton-line short"></div></div>
+      </div>
       <div id="noTokens" class="empty-state hidden">
-        <p>Noch keine Links erstellt. Klicke auf "+ Neuen Link erstellen".</p>
+        <p data-i18n="no_tokens">Noch keine Links erstellt.</p>
       </div>
     </div>
 
     <div class="feedbacks-section">
-      <h2>Eingegangene Feedbacks</h2>
+      <h2 data-i18n="section_feedbacks">Eingegangene Feedbacks</h2>
       <div id="feedbacksList" class="feedbacks-list"></div>
+      <div id="feedbacksSkeleton" class="feedbacks-list">
+        <div class="skeleton-item"><div class="skeleton-line medium"></div><div class="skeleton-line short"></div></div>
+        <div class="skeleton-item"><div class="skeleton-line medium"></div><div class="skeleton-line short"></div></div>
+      </div>
       <div id="noFeedbacks" class="empty-state hidden">
-        <p>Noch keine Feedbacks eingegangen.</p>
+        <p data-i18n="no_feedbacks">Noch keine Feedbacks eingegangen.</p>
       </div>
     </div>
   </div>
 
-  <div id="detailView" class="view hidden">
-    <header class="detail-header">
-      <button id="btnBack" class="btn btn-secondary">&#8594; Zurück</button>
-      <h2>Feedback-Details</h2>
-      <button id="btnDeleteFeedback" class="btn btn-danger">Löschen</button>
-    </header>
-    <div id="detailContent" class="detail-content"></div>
+  <div id="detailModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 data-i18n="detail_title">Feedback-Details</h2>
+        <button id="btnCloseModal" class="btn-close">&times;</button>
+      </div>
+      <div id="modalContent" class="modal-content"></div>
+      <div class="modal-footer">
+        <button id="btnDeleteFeedback" class="btn btn-danger" data-i18n="btn_delete">Löschen</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="batchModal" class="modal-overlay hidden">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 data-i18n="batch_title">Mehrere Links erstellen</h2>
+        <button id="btnCloseBatch" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-content">
+        <div class="form-group">
+          <label data-i18n="batch_count">Anzahl Links</label>
+          <input type="number" id="batchCount" min="1" max="50" value="5" class="input-lg">
+        </div>
+        <div id="batchResult" class="batch-result hidden">
+          <p id="batchResultText"></p>
+          <button id="btnCopyAllBatch" class="btn btn-primary btn-sm" data-i18n="btn_copy_all">Alle kopieren</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btnCreateBatch" class="btn btn-primary" data-i18n="btn_create">Erstellen</button>
+      </div>
+    </div>
   </div>
 
   <div id="toast" class="toast hidden"></div>
