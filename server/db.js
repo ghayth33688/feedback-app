@@ -25,9 +25,33 @@ async function initDB() {
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     token TEXT UNIQUE NOT NULL,
     answers TEXT NOT NULL DEFAULT '{}',
+    q1 TEXT, q2 TEXT, q3 TEXT, q4 TEXT, q5 TEXT,
+    q6 TEXT, q7 TEXT, q8 TEXT, q9 TEXT, q10 TEXT,
     created_at TEXT DEFAULT (datetime('now')),
     FOREIGN KEY (token) REFERENCES tokens(token)
   )`);
+
+  const fCols = await db.execute("PRAGMA table_info(feedbacks)");
+  const hasAnswers = fCols.rows.some(c => c.name === 'answers');
+  if (!hasAnswers) {
+    await db.execute("ALTER TABLE feedbacks ADD COLUMN answers TEXT NOT NULL DEFAULT '{}'");
+  }
+
+  const oldFeedbacks = await db.execute("SELECT id, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10 FROM feedbacks WHERE answers = '{}' AND q1 IS NOT NULL");
+  for (const row of oldFeedbacks.rows) {
+    const answers = {};
+    if (row.q1) answers.q1 = row.q1;
+    if (row.q2) answers.q2 = row.q2;
+    if (row.q3) answers.q3 = row.q3;
+    if (row.q4) answers.q4 = row.q4;
+    if (row.q5) answers.q5 = row.q5;
+    if (row.q6) answers.q6 = row.q6;
+    if (row.q7) answers.q7 = row.q7;
+    if (row.q8) answers.q8 = row.q8;
+    if (row.q9) answers.q9 = row.q9;
+    if (row.q10) answers.q10 = row.q10;
+    await db.execute({ sql: 'UPDATE feedbacks SET answers = ? WHERE id = ?', args: [JSON.stringify(answers), row.id] });
+  }
 
   await db.execute(`CREATE TABLE IF NOT EXISTS rate_limits (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
