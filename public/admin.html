@@ -51,6 +51,7 @@
         <button id="btnNewToken" class="btn btn-primary" data-i18n="btn_new_token">+ Link erstellen</button>
         <button id="btnBatchToken" class="btn btn-secondary" data-i18n="btn_batch">+ Mehrere</button>
         <button id="btnExportCsv" class="btn btn-secondary">&#128229; CSV</button>
+        <button id="btnQuestions" class="btn btn-secondary" data-i18n="section_questions">Fragen</button>
         <button id="btnLogout" class="btn btn-secondary" data-i18n="btn_logout">Abmelden</button>
       </div>
     </header>
@@ -59,6 +60,7 @@
       <button id="btnNewTokenM" class="btn btn-primary btn-full" data-i18n="btn_new_token">+ Link erstellen</button>
       <button id="btnBatchTokenM" class="btn btn-secondary btn-full" data-i18n="btn_batch">+ Mehrere</button>
       <button id="btnExportCsvM" class="btn btn-secondary btn-full">&#128229; CSV Export</button>
+      <button id="btnQuestionsM" class="btn btn-secondary btn-full" data-i18n="section_questions">Fragen verwalten</button>
       <button id="btnStatsM" class="btn btn-secondary btn-full">&#128202; <span data-i18n="stats">Statistiken</span></button>
       <button id="btnLogoutM" class="btn btn-secondary btn-full" data-i18n="btn_logout">Abmelden</button>
     </nav>
@@ -133,6 +135,94 @@
       </div>
       <div id="noFeedbacks" class="empty-state hidden">
         <p data-i18n="no_feedbacks">Noch keine Feedbacks eingegangen.</p>
+      </div>
+    </div>
+
+    <div class="questions-section">
+      <h2 data-i18n="section_questions">Fragen verwalten</h2>
+      <button id="btnAddQuestion" class="btn btn-primary" style="margin-bottom:12px" data-i18n="q_add">Neue Frage hinzufuegen</button>
+      <div id="questionsList" class="questions-list"></div>
+      <div id="noQuestions" class="empty-state hidden">
+        <p data-i18n="q_no_questions">Noch keine Fragen erstellt.</p>
+      </div>
+
+      <div id="questionForm" class="question-form hidden">
+        <h3 id="questionFormTitle" data-i18n="q_add">Neue Frage hinzufuegen</h3>
+        <form id="questionFormEl">
+          <div class="form-row">
+            <div class="form-group" style="flex:1">
+              <label data-i18n="q_key">Key</label>
+              <input type="text" id="questionKey" placeholder="q11" required>
+            </div>
+            <div class="form-group" style="flex:1">
+              <label data-i18n="q_type">Typ</label>
+              <select id="questionType">
+                <option value="text">Offener Text</option>
+                <option value="radio">Multiple Choice</option>
+                <option value="radio_with_detail">MC + Detail</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:0 0 auto">
+              <label>&nbsp;</label>
+              <label class="checkbox-label"><input type="checkbox" id="questionRequired" checked> <span data-i18n="q_required">Pflichtfeld</span></label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label data-i18n="q_label_de">Frage (Deutsch)</label>
+            <textarea id="questionLabelDe" rows="2" required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1">
+              <label data-i18n="q_label_en">Frage (Englisch)</label>
+              <textarea id="questionLabelEn" rows="2"></textarea>
+            </div>
+            <div class="form-group" style="flex:1">
+              <label data-i18n="q_label_ar">Frage (Arabisch)</label>
+              <textarea id="questionLabelAr" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="form-group" id="optionsGroup" style="display:none">
+            <label data-i18n="q_options">Optionen (getrennt mit |)</label>
+            <input type="text" id="questionOptions" placeholder="Option1|Option2|Option3">
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" data-i18n="q_save">Speichern</button>
+            <button type="button" id="btnCancelQuestion" class="btn btn-secondary" data-i18n="q_cancel">Abbrechen</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="settings-card">
+        <h3 data-i18n="form_title_label">Formular-Einstellungen</h3>
+        <div class="form-row">
+          <div class="form-group" style="flex:1">
+            <label data-i18n="form_title_label">Titel (DE)</label>
+            <input type="text" id="settingTitleDe">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>Titel (EN)</label>
+            <input type="text" id="settingTitleEn">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>Titel (AR)</label>
+            <input type="text" id="settingTitleAr">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1">
+            <label>Untertitel (DE)</label>
+            <textarea id="settingSubtitleDe" rows="2"></textarea>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>Untertitel (EN)</label>
+            <textarea id="settingSubtitleEn" rows="2"></textarea>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>Untertitel (AR)</label>
+            <textarea id="settingSubtitleAr" rows="2"></textarea>
+          </div>
+        </div>
+        <button id="btnSaveSettings" class="btn btn-primary" data-i18n="q_save">Speichern</button>
       </div>
     </div>
   </div>

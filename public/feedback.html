@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#1a1a2e">
-  <title>استبيان الرأي - تقييم الأداء</title>
+  <title>استبيان الرأي</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
@@ -35,147 +35,15 @@
   <div id="feedbackForm" class="screen hidden">
     <div class="form-header">
       <div class="header-icon">&#128172;</div>
-      <h1>استبيان الرأي</h1>
-      <p class="subtitle">نقدّر وقتك وصراحتك. إجاباتك ستبقى سرّية.</p>
+      <h1 id="formTitle">استبيان الرأي</h1>
+      <p class="subtitle" id="formSubtitle">نقدّر وقتك وصراحتك. إجاباتك ستبقى سرّية.</p>
     </div>
-
     <form id="form" novalidate>
-
-      <div class="question-card">
-        <div class="question-number">1</div>
-        <label>ما أكثر شيء أعجبك في العمل معنا؟</label>
-        <textarea name="q1" rows="3" placeholder="اكتب إجابتك هنا..." required></textarea>
-      </div>
-
-      <div class="question-card">
-        <div class="question-number">2</div>
-        <label>ما الشيء الذي لم يعجبك أو تعتقد أنه يحتاج إلى تحسين؟</label>
-        <textarea name="q2" rows="3" placeholder="اكتب إجابتك هنا..." required></textarea>
-      </div>
-
-      <div class="question-card">
-        <div class="question-number">3</div>
-        <label>هل هناك شيء في طريقة العمل أو التعامل معنا لم يكن جيدًا بالنسبة لك؟ إذا نعم، ما هو؟</label>
-        <textarea name="q3" rows="3" placeholder="اكتب إجابتك هنا... (اختياري)"></textarea>
-      </div>
-
-      <div class="question-card">
-        <div class="question-number">4</div>
-        <label>كيف تقيّم ساعات وأوقات العمل بالنسبة لك؟</label>
-        <div class="options-grid">
-          <label class="option-card">
-            <input type="radio" name="q4" value="ممتازة" required>
-            <span class="option-label">ممتازة</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q4" value="جيدة">
-            <span class="option-label">جيدة</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q4" value="مقبولة">
-            <span class="option-label">مقبولة</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q4" value="تحتاج إلى تحسين">
-            <span class="option-label">تحتاج إلى تحسين</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="question-card">
-        <div class="question-number">5</div>
-        <label>كيف تقيّم التعامل والاحترام داخل العمل؟</label>
-        <div class="options-grid">
-          <label class="option-card">
-            <input type="radio" name="q5" value="ممتاز" required>
-            <span class="option-label">ممتاز</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q5" value="جيد">
-            <span class="option-label">جيد</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q5" value="مقبول">
-            <span class="option-label">مقبول</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q5" value="يحتاج إلى تحسين">
-            <span class="option-label">يحتاج إلى تحسين</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="question-card">
-        <div class="question-number">6</div>
-        <label>هل تشعر أن التعامل معك كان عادلًا؟</label>
-        <div class="options-grid">
-          <label class="option-card">
-            <input type="radio" name="q6" value="نعم" required>
-            <span class="option-label">نعم</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q6" value="إلى حد ما">
-            <span class="option-label">إلى حد ما</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q6" value="لا">
-            <span class="option-label">لا</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q6" value="أريد أن أوضح السبب">
-            <span class="option-label">أريد أن أوضح السبب</span>
-          </label>
-        </div>
-        <textarea name="q6_detail" rows="2" placeholder="اشرح السبب هنا... (اختياري)" class="conditional-textarea" data-show-when="أريد أن أوضح السبب" data-for="q6"></textarea>
-      </div>
-
-      <div class="question-card">
-        <div class="question-number">7</div>
-        <label>هل كانت الأمور واضحة وشفافة بالنسبة لك، مثل ساعات العمل، المهام، الأجر وطريقة التعامل؟</label>
-        <div class="options-grid">
-          <label class="option-card">
-            <input type="radio" name="q7" value="نعم" required>
-            <span class="option-label">نعم</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q7" value="إلى حد ما">
-            <span class="option-label">إلى حد ما</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q7" value="لا">
-            <span class="option-label">لا</span>
-          </label>
-          <label class="option-card">
-            <input type="radio" name="q7" value="أريد أن أوضح السبب">
-            <span class="option-label">أريد أن أوضح السبب</span>
-          </label>
-        </div>
-        <textarea name="q7_detail" rows="2" placeholder="اشرح السبب هنا... (اختياري)" class="conditional-textarea" data-show-when="أريد أن أوضح السبب" data-for="q7"></textarea>
-      </div>
-
-      <div class="question-card">
-        <div class="question-number">8</div>
-        <label>هل شعرت في أي وقت أن هناك شيئًا غير عادل أو غير واضح؟ إذا نعم، اشرح ذلك بصراحة.</label>
-        <textarea name="q8" rows="3" placeholder="اكتب إجابتك هنا... (اختياري)"></textarea>
-      </div>
-
-      <div class="question-card">
-        <div class="question-number">9</div>
-        <label>ما الشيء الذي تتمنى أن يتغير أو يتحسن في المستقبل؟</label>
-        <textarea name="q9" rows="3" placeholder="اكتب إجابتك هنا... (اختياري)"></textarea>
-      </div>
-
-      <div class="question-card">
-        <div class="question-number">10</div>
-        <label>هل لديك أي ملاحظات أو اقتراحات أخرى تريد أن تقولها لي بصراحة؟</label>
-        <textarea name="q10" rows="3" placeholder="اكتب إجابتك هنا... (اختياري)"></textarea>
-      </div>
-
+      <div id="questionsContainer"></div>
       <button type="submit" class="btn-submit" id="submitBtn">
         <span class="btn-text">إرسال الاستبيان</span>
         <span class="btn-loading hidden">جاري الإرسال...</span>
       </button>
-
     </form>
   </div>
 

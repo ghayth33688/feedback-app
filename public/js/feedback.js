@@ -20,6 +20,81 @@
     showScreen('error');
   }
 
+  function getLang() {
+    const path = window.location.pathname;
+    if (path.includes('/ar/')) return 'ar';
+    if (path.includes('/en/')) return 'en';
+    return 'ar';
+  }
+
+  function renderQuestions(questions, settings) {
+    const lang = getLang();
+    const container = document.getElementById('questionsContainer');
+
+    if (settings) {
+      const titleKey = lang === 'en' ? 'form_title_en' : (lang === 'ar' ? 'form_title_ar' : 'form_title');
+      const subKey = lang === 'en' ? 'form_subtitle_en' : (lang === 'ar' ? 'form_subtitle_ar' : 'form_subtitle');
+      if (settings[titleKey]) document.getElementById('formTitle').textContent = settings[titleKey];
+      if (settings[subKey]) document.getElementById('formSubtitle').textContent = settings[subKey];
+    }
+
+    container.innerHTML = questions.map((q, idx) => {
+      const qLabel = lang === 'en' ? (q.label_en || q.label) : (lang === 'ar' ? (q.label_ar || q.label) : q.label);
+
+      if (q.type === 'radio' || q.type === 'radio_with_detail') {
+        const options = (q.options || '').split('|').filter(Boolean);
+        const isRTL = true;
+        const showDetail = q.type === 'radio_with_detail';
+
+        let html = `
+          <div class="question-card">
+            <div class="question-number">${q.sort_order}</div>
+            <label>${qLabel}</label>
+            <div class="options-grid">
+              ${options.map(opt => `
+                <label class="option-card">
+                  <input type="radio" name="${q.key}" value="${opt}" ${q.required ? 'required' : ''}>
+                  <span class="option-label">${opt}</span>
+                </label>
+              `).join('')}
+            </div>`;
+
+        if (showDetail) {
+          const lastOpt = options[options.length - 1];
+          html += `
+            <textarea name="${q.key}_detail" rows="2" placeholder="اشرح السبب هنا... (اختياري)" class="conditional-textarea" data-show-when="${lastOpt}" data-for="${q.key}"></textarea>`;
+        }
+
+        html += '</div>';
+        return html;
+      }
+
+      return `
+        <div class="question-card">
+          <div class="question-number">${q.sort_order}</div>
+          <label>${qLabel}${!q.required ? ' (اختياري)' : ''}</label>
+          <textarea name="${q.key}" rows="3" placeholder="اكتب إجابتك هنا..." ${q.required ? 'required' : ''}></textarea>
+        </div>`;
+    }).join('');
+
+    container.querySelectorAll('.conditional-textarea').forEach(textarea => {
+      const forName = textarea.dataset.for;
+      const showWhen = textarea.dataset.showWhen;
+      const radios = container.querySelectorAll(`input[name="${forName}"]`);
+      radios.forEach(radio => {
+        radio.addEventListener('change', () => {
+          if (radio.value === showWhen && radio.checked) {
+            textarea.classList.remove('hidden');
+            textarea.focus();
+          } else {
+            textarea.classList.add('hidden');
+            textarea.value = '';
+          }
+        });
+      });
+    });
+  }
+
   async function validateToken() {
     if (!token || token.length < 10 || token.includes('/') || token.includes(' ')) {
       showError('هذا الرابط غير صالح.');
@@ -27,56 +102,52 @@
     }
 
     try {
-      const res = await fetch(`/api/feedback/validate/${token}`);
-      const data = await res.json();
+      const validateRes = await fetch(`/api/feedback/validate/${token}`);
+      const validateData = await validateRes.json();
 
-      if (data.valid) {
-        showScreen('form');
-      } else {
-        if (res.status === 400) {
-          showScreen('expired');
-        } else {
-          showError(data.message || 'هذا الرابط غير صالح.');
-        }
+      if (!validateData.valid) {
+        if (validateRes.status === 400) showScreen('expired');
+        else showError(validateData.message || 'هذا الرابط غير صالح.');
+        return;
       }
+
+      const qRes = await fetch('/api/feedback/questions');
+      const qData = await qRes.json();
+
+      renderQuestions(qData.questions, qData.settings);
+      showScreen('form');
     } catch (err) {
       showError('حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.');
     }
   }
 
-  // Conditional textareas for q6 and q7
-  document.querySelectorAll('.conditional-textarea').forEach(textarea => {
-    const forName = textarea.dataset.for;
-    const showWhen = textarea.dataset.showWhen;
-    const radios = document.querySelectorAll(`input[name="${forName}"]`);
-
-    radios.forEach(radio => {
-      radio.addEventListener('change', () => {
-        if (radio.value === showWhen && radio.checked) {
-          textarea.classList.remove('hidden');
-          textarea.focus();
-        } else {
-          textarea.classList.add('hidden');
-          textarea.value = '';
-        }
-      });
-    });
-  });
-
-  // Form submission
   document.getElementById('form').addEventListener('submit', async (e) => {
     e.preventDefault();
-
     const form = e.target;
     const formData = new FormData(form);
-    const data = {};
+    const answers = {};
 
     for (const [key, value] of formData.entries()) {
-      data[key] = value.trim();
+      if (!key.endsWith('_detail')) {
+        answers[key] = value.trim();
+      }
     }
 
-    // Validate required fields
-    const required = ['q1', 'q2', 'q4', 'q5', 'q6', 'q7'];
+    const detailFields = {};
+    for (const [key, value] of formData.entries()) {
+      if (key.endsWith('_detail')) {
+        const baseKey = key.replace('_detail', '');
+        if (answers[baseKey] && answers[baseKey] !== value.trim()) {
+          detailFields[baseKey] = value.trim();
+        }
+      }
+    }
+
+    for (const [k, v] of Object.entries(detailFields)) {
+      answers[k] = answers[k] + ' - ' + v;
+    }
+
+    const allRequired = form.querySelectorAll('[required]');
     let hasError = false;
 
     document.querySelectorAll('.question-card').forEach(card => {
@@ -85,11 +156,10 @@
       if (existingError) existingError.remove();
     });
 
-    for (const field of required) {
-      if (!data[field]) {
+    for (const input of allRequired) {
+      if (!input.value || !input.value.trim()) {
         hasError = true;
-        const input = form.querySelector(`[name="${field}"]`);
-        const card = input?.closest('.question-card');
+        const card = input.closest('.question-card');
         if (card) {
           card.classList.add('error');
           const msg = document.createElement('div');
@@ -102,23 +172,10 @@
 
     if (hasError) {
       const firstError = document.querySelector('.question-card.error');
-      if (firstError) {
-        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
-    // Append conditional detail fields
-    if (data.q6 === 'أريد أن أوضح السبب' && data.q6_detail) {
-      data.q6 = 'أريد أن أوضح السبب - ' + data.q6_detail;
-    }
-    if (data.q7 === 'أريد أن أوضح السبب' && data.q7_detail) {
-      data.q7 = 'أريد أن أوضح السبب - ' + data.q7_detail;
-    }
-    delete data.q6_detail;
-    delete data.q7_detail;
-
-    // Submit
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.querySelector('.btn-text').classList.add('hidden');
@@ -128,18 +185,16 @@
       const res = await fetch(`/api/feedback/submit/${token}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ answers })
       });
-
       const result = await res.json();
-
       if (res.ok && result.success) {
         showScreen('success');
       } else {
         throw new Error(result.error || 'Fehler beim Absenden');
       }
     } catch (err) {
-      alert(err.message || 'حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.');
+      alert(err.message || 'حدث خطأ في الاتصال.');
       submitBtn.disabled = false;
       submitBtn.querySelector('.btn-text').classList.remove('hidden');
       submitBtn.querySelector('.btn-loading').classList.add('hidden');
